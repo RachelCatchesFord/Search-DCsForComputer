@@ -19,3 +19,26 @@ $DomainControllers | ForEach-Object{
     }
     #>
 }
+
+##Aaron's Script
+#Get a list of all domain controllers
+$dcs=Get-ADDomainController -Filter * | Select-Object name
+#Computer to search
+$computername = Read-Host 'Computer Name'
+
+#Run a foreach cycle to Search a computer across all Domain Controllers
+foreach ($dc in $dcs.Name) {
+	#Try to run Get-ADComputer and write Computername - DC name, if it fails use Catch to write something else
+	Try {	
+			$temp = Get-ADComputer ($computername) -Server $dc | select Name
+			write-host "$($temp.Name) - $($dc)"
+		}
+	
+	Catch{write-host "Does not exist on $($dc)."}
+Finally
+{
+$Time=Get-Date
+write-host "$Time"
+}
+}
+Get-ADComputer "$computername"
