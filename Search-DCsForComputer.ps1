@@ -12,12 +12,6 @@ $DomainControllers | ForEach-Object{
     $Results = $ADSearch | select Name, DistinguishedName, Description
 
     Write-Output "$DC Found $Results"
-   <# Props = @{
-        $DC = $_
-        $ADSearch.Name = $Computer
-
-    }
-    #>
 }
 <#
 ##Aaron's Script
