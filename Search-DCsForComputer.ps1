@@ -5,7 +5,7 @@ Param(
     $Computer
 )
 
-$DomainControllers = (Get-ADForest).Domains | ForEach-Object{Get-ADDomainController -Filter * -Server $_} | Select-Object -ExpandProperty Name
+$DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike 'DHSAZDC11') -and ($_.Name -notlike 'CDHS-ESSP-DC1') -and ($_.Name -notlike 'DHSAZDC12')}
 $DomainControllers | ForEach-Object{
     Write-Output "Searching DC $($_) for Computer $($Computer)"
     $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
