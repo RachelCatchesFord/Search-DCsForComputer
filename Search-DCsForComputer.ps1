@@ -4,6 +4,12 @@ Param(
     [String]
     $Computer
 )
+## Msg Variables
+$title   = 'Delete Computer from ALL Domain Controllers?'
+$msg     = 'Do you want to Delete this computer from ALL Domain Controllers?'
+$options = '&Yes', '&No'
+$default = 1  # 0=Yes, 1=No
+$response = $Host.UI.PromptForChoice($title, $msg, $options, $default)
 
 $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike 'DHSAZDC11') -and ($_.Name -notlike 'CDHS-ESSP-DC1') -and ($_.Name -notlike 'DHSAZDC12')}
 $DomainControllers | ForEach-Object{
@@ -12,18 +18,11 @@ $DomainControllers | ForEach-Object{
     $Results = $ADSearch | select Name, DistinguishedName, Description
 
     Write-Output "$DC Found $Results"
-}
 
-$title   = 'Delete Computer from ALL Domain Controllers?'
-$msg     = 'Do you want to Delete this computer from ALL Domain Controllers?'
-$options = '&Yes', '&No'
-$default = 1  # 0=Yes, 1=No
-
-$response = $Host.UI.PromptForChoice($title, $msg, $options, $default)
-if ($response -eq 0) {
-        Write-Output "Yes!"
-}else{
-    exit 0
+    if ($response -eq 0) {
+        Write-Output "Removing $($Computer) from DC $($_)"
+        $ADSearch | Remove-ADObject -Recursive -Verbose -Confirm:$false
+    }
 }
 
 
