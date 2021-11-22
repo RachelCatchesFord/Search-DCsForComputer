@@ -1,8 +1,7 @@
 
 Param(
-    [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
-    [String]
-    $Computer
+    [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')][String]$Computer,
+    [switch]$Delete
 )
 ## Msg Variables
 $title   = 'Delete Computer from ALL Domain Controllers?'
@@ -19,7 +18,7 @@ $DomainControllers | ForEach-Object{
 
     Write-Output "$DC Found $Results"
 
-    if ($response -eq 0) {
+    if ($Delete -eq $true) {
         Write-Output "Removing $($Computer) from DC $($_)"
         $ADSearch | Remove-ADObject -Recursive -Verbose -Confirm:$false
     }
