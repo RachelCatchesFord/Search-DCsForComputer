@@ -1,7 +1,8 @@
 
 Param(
     [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')][String]$Computer,
-    [switch]$Delete
+    [switch]$Delete,
+    [switch]$CMDelete
 )
 
 $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike 'DHSAZDC11') -and ($_.Name -notlike 'CDHS-ESSP-DC1') -and ($_.Name -notlike 'DHSAZDC12')}
@@ -16,6 +17,19 @@ $DomainControllers | ForEach-Object{
         Write-Output "Removing $($Computer) from DC $($_)"
         $ADSearch | Remove-ADObject -Recursive -Verbose -Confirm:$false
     }
+
+    <#if ($CMDelete -eq $true) {
+        Write-Output "Removing $($Computer) from SCCM"
+        Import-Module ($env:SMS_ADMIN_UI_PATH.Substring(0,$env:SMS_ADMIN_UI_PATH.Length - 5) + '\ConfigurationManager.psd1') | Out-Null
+        ## Get the CMSite
+        New-PSDrive -Name "DHS" -PSProvider "AdminUI.PS.Provider\CMSite" -Root "hseftn226.cdhs.state.co.us" -Description "Primary site"
+        $Site=Get-PSDrive | Where-Object{$_.Provider -like '*CMSite'}
+        ## Mount the CMSite PS Drive
+        Set-Location $Site':'
+
+        Get-CMDevice
+
+    }#>
 }
 
 
