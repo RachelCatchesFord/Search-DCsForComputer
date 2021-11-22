@@ -3,12 +3,6 @@ Param(
     [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')][String]$Computer,
     [switch]$Delete
 )
-## Msg Variables
-$title   = 'Delete Computer from ALL Domain Controllers?'
-$msg     = 'Do you want to Delete this computer from ALL Domain Controllers?'
-$options = '&Yes', '&No'
-$default = 1  # 0=Yes, 1=No
-$response = $Host.UI.PromptForChoice($title, $msg, $options, $default)
 
 $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike 'DHSAZDC11') -and ($_.Name -notlike 'CDHS-ESSP-DC1') -and ($_.Name -notlike 'DHSAZDC12')}
 $DomainControllers | ForEach-Object{
