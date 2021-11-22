@@ -13,6 +13,20 @@ $DomainControllers | ForEach-Object{
 
     Write-Output "$DC Found $Results"
 }
+
+$title   = 'Delete Computer from ALL Domain Controllers?'
+$msg     = 'Do you want to Delete this computer from ALL Domain Controllers?'
+$options = '&Yes', '&No'
+$default = 1  # 0=Yes, 1=No
+
+$response = $Host.UI.PromptForChoice($title, $msg, $options, $default)
+if ($response -eq 0) {
+        Write-Output "Yes!"
+}else{
+    exit 0
+}
+
+
 <#
 ##Aaron's Script
 #Get a list of all domain controllers
