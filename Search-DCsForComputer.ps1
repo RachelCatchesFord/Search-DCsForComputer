@@ -33,6 +33,5 @@ Write-Output "$DC Found $Results"
         $CMResourceID = (Get-CMDevice -Name $Computer).ResourceID
         Write-Host ("Found $Computer in SCCM. Removing.")
         Remove-CMResource -ResourceID $CMResourceID -Force
-
     }
 }
