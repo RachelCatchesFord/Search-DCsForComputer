@@ -1,7 +1,7 @@
 
 Param(
     [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')][String]$Computer,
-    [switch]$Delete,
+    [switch]$ADDelete,
     [switch]$CMDelete
 )
 
