@@ -13,25 +13,27 @@ $DomainControllers | ForEach-Object{
 
     Write-Output "$DC Found $Results"
 
-    if ($Delete -eq $true){
+    if ($ADDelete -eq $true){
         Write-Output "Removing $($Computer) from DC $($_)"
         $ADSearch | Remove-ADObject -Recursive -Verbose -Confirm:$false
     }
-
-    if ($CMDelete -eq $true){
-        # Import the module for SCCM
-        Import-Module ($env:SMS_ADMIN_UI_PATH.Substring(0,$env:SMS_ADMIN_UI_PATH.Length - 5) + '\ConfigurationManager.psd1') | Out-Null
-
-        ## Get the CMSite
-        # In order for this next line to work, you must login to your computer as your SafeGuard account (the same account that is running this script)
-        $Site=Get-PSDrive | Where-Object{$_.Provider -like '*CMSite'}
-
-        ## Mount the CMSite PS Drive
-        Set-Location $Site':'
-
-        #Get the resource ID of the device and remove it from SCCM.
-        $CMResourceID = (Get-CMDevice -Name $Computer).ResourceID
-        Write-Host ("Found $Computer in SCCM. Removing.")
-        Remove-CMResource -ResourceID $CMResourceID -Force
-    }
 }
+
+if ($CMDelete -eq $true){
+    # Import the module for SCCM
+    Import-Module ($env:SMS_ADMIN_UI_PATH.Substring(0,$env:SMS_ADMIN_UI_PATH.Length - 5) + '\ConfigurationManager.psd1') | Out-Null
+
+    ## Get the CMSite
+    # In order for this next line to work, you must login to your computer as your SafeGuard account (the same account that is running this script)
+    $Site=Get-PSDrive | Where-Object{$_.Provider -like '*CMSite'}
+
+    ## Mount the CMSite PS Drive
+    Set-Location $Site':'
+
+    #Get the resource ID of the device and remove it from SCCM.
+    $CMResourceID = (Get-CMDevice -Name $Computer).ResourceID
+    Write-Host ("Found $Computer in SCCM. Removing.")
+    Remove-CMResource -ResourceID $CMResourceID -Force
+}
+
+Set-Location C:
