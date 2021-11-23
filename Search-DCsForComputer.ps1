@@ -7,11 +7,11 @@ Param(
 
 $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike 'DHSAZDC11') -and ($_.Name -notlike 'CDHS-ESSP-DC1') -and ($_.Name -notlike 'DHSAZDC12')}
 $DomainControllers | ForEach-Object{
-Write-Output "Searching DC $($_) for Computer $($Computer)"
-$ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
-$Results = $ADSearch | select Name, DistinguishedName, Description
+    Write-Output "Searching DC $($_) for Computer $($Computer)"
+    $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
+    $Results = $ADSearch | select Name, DistinguishedName, Description
 
-Write-Output "$DC Found $Results"
+    Write-Output "$DC Found $Results"
 
     if ($Delete -eq $true){
         Write-Output "Removing $($Computer) from DC $($_)"
