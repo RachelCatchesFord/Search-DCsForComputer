@@ -4,7 +4,7 @@ Param(
     [switch]$ADDelete,
     [switch]$CMDelete
 )
-
+$CurrentLoc = Get-Location
 $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike 'DHSAZDC11') -and ($_.Name -notlike 'CDHS-ESSP-DC1') -and ($_.Name -notlike 'DHSAZDC12')}
 $DomainControllers | ForEach-Object{
     Write-Output "Searching DC $($_) for Computer $($Computer)"
@@ -20,20 +20,26 @@ $DomainControllers | ForEach-Object{
 }
 
 if ($CMDelete -eq $true){
-    # Import the module for SCCM
-    Import-Module ($env:SMS_ADMIN_UI_PATH.Substring(0,$env:SMS_ADMIN_UI_PATH.Length - 5) + '\ConfigurationManager.psd1') | Out-Null
+    $CMAdminPath = $env:SMS_ADMIN_UI_PATH.Substring(0,$env:SMS_ADMIN_UI_PATH.Length - 5)
+    if(Test-Path -Path $CMAdminPath){
+        # Import the module for SCCM
+        Import-Module ($CMAdminPath + '\ConfigurationManager.psd1') | Out-Null
+        
+        ## Get the CMSite
+        # In order for this next line to work, you must login to your computer as your SafeGuard account (the same account that is running this script)
+        $Site=Get-PSDrive | Where-Object{$_.Provider -like '*CMSite'}
 
-    ## Get the CMSite
-    # In order for this next line to work, you must login to your computer as your SafeGuard account (the same account that is running this script)
-    $Site=Get-PSDrive | Where-Object{$_.Provider -like '*CMSite'}
+        ## Mount the CMSite PS Drive
+        Set-Location $Site':'
 
-    ## Mount the CMSite PS Drive
-    Set-Location $Site':'
-
-    #Get the resource ID of the device and remove it from SCCM.
-    $CMResourceID = (Get-CMDevice -Name $Computer).ResourceID
-    Write-Host ("Found $Computer in SCCM. Removing.")
-    Remove-CMResource -ResourceID $CMResourceID -Force
+        #Get the resource ID of the device and remove it from SCCM.
+        $CMResourceID = (Get-CMDevice -Name $Computer).ResourceID
+        Write-Host ("Found $Computer in SCCM. Removing.")
+        Remove-CMResource -ResourceID $CMResourceID -Force
+    }else{
+        Write-Error "CMAdmin Path Not Found. Please make sure the SCCM Admin Console is installed."
+        Exit 1
+    }
 }
 
-Set-Location C:
+Set-Location $CurrentLoc
