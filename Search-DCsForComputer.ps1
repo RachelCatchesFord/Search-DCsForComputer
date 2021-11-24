@@ -1,25 +1,42 @@
 
 Param(
-    [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')][String]$Computer,
+    [Parameter(Mandatory,ParameterSetName="Computer",ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')][String]$Computer,
+    [Parameter(Mandatory,ParameterSetName="CSV")][ValidatePattern('\.csv$')][string]$CSV,
     [switch]$ADDelete,
     [switch]$CMDelete
 )
-$CurrentLoc = Get-Location
+
+## Global Variables
 $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike 'DHSAZDC11') -and ($_.Name -notlike 'CDHS-ESSP-DC1') -and ($_.Name -notlike 'DHSAZDC12')}
-$DomainControllers | ForEach-Object{
-    Write-Output "Searching DC $($_) for Computer $($Computer)"
-    $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
-    $Results = $ADSearch | select Name, DistinguishedName, Description
+$CurrentLoc = Get-Location
 
-    Write-Output "$DC Found $Results"
+Function Get-ComputerFromAD{   
+    Param(
+        [string]$Computer
+    )
+    $DomainControllers | ForEach-Object{
+        Write-Output "Searching DC $($_) for Computer $($Computer)"
+        $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
+        $Results = $ADSearch | select Name, DistinguishedName, Description
+        Write-Output "$DC Found $Results"
+    }
+}
 
-    if ($ADDelete -eq $true){
+Function Remove-ComputerFromAD{
+    Param(
+        [string]$Computer
+    )
+    $DomainControllers | ForEach-Object{
+        $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
         Write-Output "Removing $($Computer) from DC $($_)"
         $ADSearch | Remove-ADObject -Recursive -Verbose -Confirm:$false
     }
 }
 
-if ($CMDelete -eq $true){
+Function Remove-ComputerFromSCCM{
+    Param(
+        [string]$Computer
+    )
     $CMAdminPath = $env:SMS_ADMIN_UI_PATH.Substring(0,$env:SMS_ADMIN_UI_PATH.Length - 5)
     if(Test-Path -Path $CMAdminPath){
         # Import the module for SCCM
@@ -40,6 +57,30 @@ if ($CMDelete -eq $true){
         Write-Error "CMAdmin Path Not Found. Please make sure the SCCM Admin Console is installed."
         Exit 1
     }
+}
+
+if($Computer -eq $true){
+    Get-ComputerFromAD
+    if ($ADDelete -eq $true){
+        Remove-ComputerFromAD
+    }
+    if ($CMDelete -eq $true){
+        Remove-ComputerFromSCCM
+    }        
+}else{ # if CSV 
+    $CSV | Foreach-Object{
+        Get-ComputerFromAD    
+    }
+    if ($ADDelete -eq $true){
+        $CSV | Foreach-Object{
+            Remove-ComputerFromAD
+        }
+    }
+    if ($CMDelete -eq $true){
+        $CSV | Foreach-Object{
+            Remove-ComputerFromSCCM
+        }
+    } 
 }
 
 Set-Location $CurrentLoc
