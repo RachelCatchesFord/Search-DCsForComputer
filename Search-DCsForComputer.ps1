@@ -11,9 +11,7 @@ $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -
 $CurrentLoc = Get-Location
 
 Function Get-ComputerFromAD{   
-    Param(
-        [string]$Computer
-    )
+
     $DomainControllers | ForEach-Object{
         Write-Output "Searching DC $($_) for Computer $($Computer)"
         $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
@@ -23,9 +21,7 @@ Function Get-ComputerFromAD{
 }
 
 Function Remove-ComputerFromAD{
-    Param(
-        [string]$Computer
-    )
+
     $DomainControllers | ForEach-Object{
         $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
         Write-Output "Removing $($Computer) from DC $($_)"
@@ -34,9 +30,7 @@ Function Remove-ComputerFromAD{
 }
 
 Function Remove-ComputerFromSCCM{
-    Param(
-        [string]$Computer
-    )
+
     $CMAdminPath = $env:SMS_ADMIN_UI_PATH.Substring(0,$env:SMS_ADMIN_UI_PATH.Length - 5)
     if(Test-Path -Path $CMAdminPath){
         # Import the module for SCCM
@@ -69,7 +63,7 @@ if($Computer -eq $true){
     }        
 }else{ # if CSV 
     $CSV | Foreach-Object{
-        Get-ComputerFromAD    
+        Get-ComputerFromAD  
     }
     if ($ADDelete -eq $true){
         $CSV | Foreach-Object{
