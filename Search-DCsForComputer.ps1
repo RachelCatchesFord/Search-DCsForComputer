@@ -9,7 +9,6 @@ Param(
 ## Global Variables
 $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike 'DHSAZDC11') -and ($_.Name -notlike 'CDHS-ESSP-DC1') -and ($_.Name -notlike 'DHSAZDC12')}
 $CurrentLoc = Get-Location
-
 $ComputerCSV = Import-Csv -Path $CSV
 
 Function Get-ComputerFromAD{   
@@ -74,16 +73,16 @@ if($Computer -eq $true){
     }        
 }else{ # if CSV 
     $ComputerCSV | Foreach-Object{
-        Get-ComputerFromAD -Computer $_
+        Get-ComputerFromAD -Computer $_.ComputerName
     }
     if ($ADDelete -eq $true){
         $ComputerCSV| Foreach-Object{
-            Remove-ComputerFromAD -Computer $_
+            Remove-ComputerFromAD -Computer $_.ComputerName
         }
     }
     if ($CMDelete -eq $true){
         $ComputerCSV | Foreach-Object{
-            Remove-ComputerFromSCCM -Computer $_
+            Remove-ComputerFromSCCM -Computer $_.ComputerName
         }
     } 
 }
