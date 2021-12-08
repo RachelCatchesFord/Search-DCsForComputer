@@ -11,7 +11,10 @@ $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -
 $CurrentLoc = Get-Location
 
 Function Get-ComputerFromAD{   
-
+    Param(
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
+        [String]$Computer
+    )
     $DomainControllers | ForEach-Object{
         Write-Output "Searching DC $($_) for Computer $($Computer)"
         $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
@@ -21,7 +24,10 @@ Function Get-ComputerFromAD{
 }
 
 Function Remove-ComputerFromAD{
-
+    Param(
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
+        [String]$Computer
+    )
     $DomainControllers | ForEach-Object{
         $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
         Write-Output "Removing $($Computer) from DC $($_)"
@@ -30,7 +36,10 @@ Function Remove-ComputerFromAD{
 }
 
 Function Remove-ComputerFromSCCM{
-
+    Param(
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
+        [String]$Computer
+    )
     $CMAdminPath = $env:SMS_ADMIN_UI_PATH.Substring(0,$env:SMS_ADMIN_UI_PATH.Length - 5)
     if(Test-Path -Path $CMAdminPath){
         # Import the module for SCCM
@@ -54,25 +63,25 @@ Function Remove-ComputerFromSCCM{
 }
 
 if($Computer -eq $true){
-    Get-ComputerFromAD
+    Get-ComputerFromAD -Computer $Computer
     if ($ADDelete -eq $true){
-        Remove-ComputerFromAD
+        Remove-ComputerFromAD -Computer $Computer
     }
     if ($CMDelete -eq $true){
-        Remove-ComputerFromSCCM
+        Remove-ComputerFromSCCM -Computer $Computer
     }        
 }else{ # if CSV 
     $CSV | Foreach-Object{
-        Get-ComputerFromAD  
+        Get-ComputerFromAD -Computer $_
     }
     if ($ADDelete -eq $true){
         $CSV | Foreach-Object{
-            Remove-ComputerFromAD
+            Remove-ComputerFromAD -Computer $_
         }
     }
     if ($CMDelete -eq $true){
         $CSV | Foreach-Object{
-            Remove-ComputerFromSCCM
+            Remove-ComputerFromSCCM -Computer $_
         }
     } 
 }
