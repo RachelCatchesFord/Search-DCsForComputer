@@ -1,9 +1,16 @@
 
 Param(
-    [Parameter(Mandatory,ParameterSetName="Computer",ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')][String]$Computer,
-    [Parameter(Mandatory,ParameterSetName="CSV")][ValidatePattern('\.csv$')][string]$CSV,
-    [switch]$ADDelete,
-    [switch]$CMDelete
+    [Parameter(Mandatory,ParameterSetName="Computer",ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
+    [String]
+    $Computer,
+    [Parameter(Mandatory,ParameterSetName="CSV")]
+    [ValidatePattern('\.csv$')]
+    [string]
+    $CSV,
+    [switch]
+    $ADDelete,
+    [switch]
+    $CMDelete
 )
 
 ## Global Variables
@@ -63,7 +70,7 @@ Function Remove-ComputerFromSCCM{
     }
 }
 
-if($Computer -eq $true){
+if($null -ne $Computer){
     Get-ComputerFromAD -Computer $Computer
     if ($ADDelete -eq $true){
         Remove-ComputerFromAD -Computer $Computer
