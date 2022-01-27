@@ -70,7 +70,7 @@ Function Remove-ComputerFromSCCM{
     }
 }
 
-if($null -ne $Computer){
+if($Computer -ne ''){
     Get-ComputerFromAD -Computer $Computer
     if ($ADDelete -eq $true){
         Remove-ComputerFromAD -Computer $Computer
