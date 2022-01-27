@@ -14,7 +14,7 @@ Param(
 )
 
 ## Global Variables
-$DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike 'DHSAZDC11') -and ($_.Name -notlike 'CDHS-ESSP-DC1') -and ($_.Name -notlike 'DHSAZDC12')}
+$DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike '*DC*')}
 $CurrentLoc = Get-Location
 
 
