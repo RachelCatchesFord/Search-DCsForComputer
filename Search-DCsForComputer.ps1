@@ -1,14 +1,16 @@
-
+[CmdletBinding()]
 Param(
     [Parameter(Mandatory,ParameterSetName="Computer",ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
     [String]
     $Computer,
-    [Parameter(Mandatory,ParameterSetName="CSV")]
+    [Parameter(Mandatory,ParameterSetName="CSV",HelpMessage='.csv file to import')]
     [ValidatePattern('\.csv$')]
     [string]
     $CSV,
+    [parameter(Mandatory = $false,HelpMessage='if set will delete the device from AD')]
     [switch]
     $ADDelete,
+    [parameter(Mandatory = $false,HelpMessage='if set will delete the device from SCCM/MECM')]
     [switch]
     $CMDelete
 )
@@ -19,6 +21,7 @@ $CurrentLoc = Get-Location
 
 
 Function Get-ComputerFromAD{   
+    [CmdletBinding()]
     Param(
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
         [String]$Computer
@@ -32,6 +35,7 @@ Function Get-ComputerFromAD{
 }
 
 Function Remove-ComputerFromAD{
+    [CmdletBinding()]
     Param(
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
         [String]$Computer
@@ -44,6 +48,7 @@ Function Remove-ComputerFromAD{
 }
 
 Function Remove-ComputerFromSCCM{
+    [CmdletBinding()]
     Param(
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
         [String]$Computer
