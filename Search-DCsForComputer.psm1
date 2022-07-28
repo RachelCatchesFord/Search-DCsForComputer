@@ -85,7 +85,11 @@ Function Remove-ComputerFromAD{
 
         .DESCRIPTION
     
-        .PARAMETER Path
+        .PARAMETER Computer
+        String. Required. Computer name that you wish to remove from AD.
+
+        .PARAMETER LogPath
+        String. Path to save log files to.
     
         .INPUTS
 
@@ -158,7 +162,11 @@ Function Remove-ComputerFromSCCM{
 
         .DESCRIPTION
     
-        .PARAMETER Path
+        .PARAMETER Computer
+        String. Required. Computer name that you wish to remove from SCCM.
+
+        .PARAMETER LogPath
+        String. Path to save log files to.
     
         .INPUTS
 
