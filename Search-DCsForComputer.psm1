@@ -23,6 +23,11 @@ Function Get-ComputerFromAD{
     Param(
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,HelpMessage='Computer name to search for.')]
         [String]$Computer,
+        [Parameter(Mandatory=$false,HelpMessage='Switch to set the search type to ADSI.')]
+        [switch]$ADSI,
+        [Parameter(Mandatory=$false,HelpMessage='Specific Domain Controller.')]
+        [ValidateScript({$_.Trim()} )]
+        [string]$DomainController = '',
         [Parameter(Mandatory = $false, HelpMessage = 'Path to Save Log Files')]
         [string]$LogPath = "$env:Windir\Logs"
     )
@@ -39,8 +44,35 @@ Function Get-ComputerFromAD{
         Start-Transcript -Path "$LogPath\Get-ComputerFromAD.log"
         $Status = 'Starting'
         Write-Verbose -Message "Script Status: $Status"
-        Write-Verbose -Message "Getting a list of Domain Controllers."
-        $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike '*DC*')}
+        if(($DomainContoller -ne '')){
+            Write-Verbose -Message "User supplied domain controller name $DomainController"
+            Try{
+                if($ADSI){
+                    $DomainControllers = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().DomainControllers | Where-Object{$_.Name -like "*$DomainController*"}
+                } else {
+                    $DomainControllers = Get-ADDomainController -Filter * | Where-Object{$_.Name -like "*$DomainController*"}
+                }
+                
+            } Catch {
+                Write-Error $_.Exception.Message
+                Write-Error $_.Exception.ItemName
+                $Status = 'Failed'
+                Throw "Could not find a Domain Controller match."
+            }
+        } else {
+            Write-Verbose -Message "Getting a list of Domain Controllers."
+            if($ADSI){
+                $DomainControllers = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().DomainControllers 
+            } else {
+                $DomainControllers = Get-ADDomainController -Filter *
+                
+            }
+             
+        }
+        
+        
+        
+        
         
     }
     process{
@@ -49,9 +81,22 @@ Function Get-ComputerFromAD{
         try{
             #-- Try the things
             $DomainControllers | ForEach-Object{
-                Write-Verbose "Searching DC $($_) for Computer $($Computer)"
-                $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
-                $Results = $ADSearch | Select-Object Name, DistinguishedName, Description
+                Write-Verbose "Searching DC $($_.Name) for Computer $($Computer)"
+                if($ADSI){
+                    Write-Verbose -Message 'Creating Searcher object.'
+                    $Searcher = [adsisearcher]""
+                    Write-Verbose -Message "Adding  LDAP://$($_) to SearchRoot."
+                    $Searcher.SearchRoot = "LDAP://$($_.Name)"
+                    Write-Verbose -Message "Adding $Computer to the Filter"
+                    $Searcher.Filter = "(&(objectCategory=Computer)(name=$Computer))"
+                    Write-Verbose -Message "Searching $($Searcher.SearchRoot.Path) for $Computer"
+                    $CompResult = ($Searcher.FindAll() | Select-Object -ExpandProperty Properties)
+                    $Results = [PSCustomObject]@{Name = $($CompResult.name);DistinguishedName = $($CompResult.distinguishedname);Description = $($CompResult.description)}
+                } else {
+                    $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
+                    $Results = $ADSearch | Select-Object Name, DistinguishedName, Description
+                }
+                
                 Write-Host "$($_) Found $Results" -ForegroundColor "Green"
 
             }
