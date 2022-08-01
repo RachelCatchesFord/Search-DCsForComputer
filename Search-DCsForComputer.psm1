@@ -25,6 +25,9 @@ Function Get-ComputerFromAD{
         [String]$Computer,
         [Parameter(Mandatory=$false,HelpMessage='Switch to set the search type to ADSI.')]
         [switch]$ADSI,
+        [Parameter(Mandatory=$false,HelpMessage='Specific Domain Controller.')]
+        [ValidateScript({$_.Trim()} )]
+        [string]$DomainController = '',
         [Parameter(Mandatory = $false, HelpMessage = 'Path to Save Log Files')]
         [string]$LogPath = "$env:Windir\Logs"
     )
@@ -41,13 +44,34 @@ Function Get-ComputerFromAD{
         Start-Transcript -Path "$LogPath\Get-ComputerFromAD.log"
         $Status = 'Starting'
         Write-Verbose -Message "Script Status: $Status"
-        Write-Verbose -Message "Getting a list of Domain Controllers."
-        if($ADSI){
-            $DomainControllers = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().DomainControllers
-
+        if(($DomainContoller -ne '')){
+            Write-Verbose -Message "User supplied domain controller name $DomainController"
+            Try{
+                if($ADSI){
+                    $DomainControllers = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().DomainControllers | Where-Object{$_.Name -like "*$DomainController*"}
+                } else {
+                    $DomainControllers = Get-ADDomainController -Filter * | Where-Object{$_.Name -like "*$DomainController*"}
+                }
+                
+            } Catch {
+                Write-Error $_.Exception.Message
+                Write-Error $_.Exception.ItemName
+                $Status = 'Failed'
+                Throw "Could not find a Domain Controller match."
+            }
         } else {
-            $DomainControllers = Get-ADDomainController -Filter *  | Where-Object{($_.Name -notlike '*DC*')}
+            Write-Verbose -Message "Getting a list of Domain Controllers."
+            if($ADSI){
+                $DomainControllers = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().DomainControllers 
+            } else {
+                $DomainControllers = Get-ADDomainController -Filter *
+                
+            }
+             
         }
+        
+        
+        
         
         
     }
@@ -69,7 +93,6 @@ Function Get-ComputerFromAD{
                     $CompResult = ($Searcher.FindAll() | Select-Object -ExpandProperty Properties)
                     $Results = [PSCustomObject]@{Name = $($CompResult.name);DistinguishedName = $($CompResult.distinguishedname);Description = $($CompResult.description)}
                 } else {
-                    $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
                     $ADSearch = Get-ADComputer -Identity "$Computer" -Property * -Server $_ 
                     $Results = $ADSearch | Select-Object Name, DistinguishedName, Description
                 }
